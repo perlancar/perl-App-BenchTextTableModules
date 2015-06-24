@@ -1,0 +1,61 @@
+#!perl
+
+# DATE
+# VERSION
+
+use 5.010001;
+use strict;
+use warnings;
+
+use App::BenchTextTableModules;
+use Benchmark::Dumb qw(cmpthese);
+use Module::Load;
+
+sub _make_table {
+    my ($cols, $rows) = @_;
+    my $res = [];
+    push @$res, [];
+    for (0..$cols-1) { $res->[0][$_] = "col" . ($_+1) }
+    for my $row (1..$rows) {
+        push @$res, [ map { "row$row.$_" } 1..$cols ];
+    }
+    $res;
+}
+
+my %tables = (
+    '0tiny(1x1)'     => _make_table( 1, 1),
+    '1small(3x5)'    => _make_table( 3, 5),
+    '2wide(30x5)'    => _make_table(30, 5),
+    '3long(3x300)'   => _make_table( 3, 300),
+    '4large(30x300)' => _make_table(30, 300),
+);
+
+# load the modules
+for my $mod (keys %App::BenchTextTableModules::contestants) {
+    load $mod;
+}
+
+# benchmark
+for my $tn (sort keys %tables) {
+    say "$tn table:";
+    my %codes;
+    for my $mod (keys %App::BenchTextTableModules::contestants) {
+        $codes{$mod} = sub { $App::BenchTextTableModules::contestants{$mod}->($tables{$tn}) };
+    }
+    cmpthese(0, \%codes);
+    say "";
+}
+
+# ABSTRACT: Benchmark Perl text table modules
+# PODNAME:
+
+=head1 SYNOPSIS
+
+ % bench-startup-text-table-modules
+
+Sample output:
+
+# COMMAND: perl -Ilib bin/bench-startup-text-table-modules
+
+
+=head1 SEE ALSO

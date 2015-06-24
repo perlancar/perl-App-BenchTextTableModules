@@ -1,0 +1,36 @@
+#!perl
+
+# DATE
+# VERSION
+
+use 5.010001;
+use strict;
+use warnings;
+
+use App::BenchTextTableModules;
+use Benchmark::Command;
+
+Benchmark::Command::run(
+    undef,
+    {
+        'none'                => [$^X, "-e1"],
+
+        map {
+            $_ => [$^X, "-e", "use $_"],
+        } sort keys %App::BenchTextTableModules::contestants,
+    },
+);
+
+# ABSTRACT: Benchmark startup time of Perl text table modules
+# PODNAME:
+
+=head1 SYNOPSIS
+
+ % bench-startup-text-table-modules
+
+Sample output:
+
+# COMMAND: perl -Ilib bin/bench-startup-text-table-modules
+
+
+=head1 SEE ALSO
