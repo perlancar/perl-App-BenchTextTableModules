@@ -11,36 +11,19 @@ use App::BenchTextTableModules;
 use Benchmark::Dumb qw(cmpthese);
 use Module::Load;
 
-sub _make_table {
-    my ($cols, $rows) = @_;
-    my $res = [];
-    push @$res, [];
-    for (0..$cols-1) { $res->[0][$_] = "col" . ($_+1) }
-    for my $row (1..$rows) {
-        push @$res, [ map { "row$row.$_" } 1..$cols ];
-    }
-    $res;
-}
-
-my %tables = (
-    '0tiny(1x1)'     => _make_table( 1, 1),
-    '1small(3x5)'    => _make_table( 3, 5),
-    '2wide(30x5)'    => _make_table(30, 5),
-    '3long(3x300)'   => _make_table( 3, 300),
-    '4large(30x300)' => _make_table(30, 300),
-);
-
 # load the modules
 for my $mod (keys %App::BenchTextTableModules::contestants) {
     load $mod;
 }
 
 # benchmark
-for my $tn (sort keys %tables) {
+for my $tn (sort keys %App::BenchTextTableModules::tables) {
     say "$tn table:";
     my %codes;
     for my $mod (keys %App::BenchTextTableModules::contestants) {
-        $codes{$mod} = sub { $App::BenchTextTableModules::contestants{$mod}->($tables{$tn}) };
+        $codes{$mod} = sub { $App::BenchTextTableModules::contestants{$mod}->(
+            $App::BenchTextTableModules::tables{$tn},
+        ) };
     }
     cmpthese(0, \%codes);
     say "";
@@ -51,11 +34,15 @@ for my $tn (sort keys %tables) {
 
 =head1 SYNOPSIS
 
- % bench-startup-text-table-modules
+ % bench-text-table-modules
+
+Sample of tables being generated (3x5 size shown here):
+
+# CODE: require App::BenchTextTableModules; for my $mod (sort keys %App::BenchTextTableModules::contestants) { no strict 'refs'; my $modpm = $mod; $modpm =~ s!::!/!g; $modpm .= ".pm"; require $modpm; say "$mod (", (${"$mod\::VERSION"} // '?'), "):"; print $App::BenchTextTableModules::contestants{$mod}->($App::BenchTextTableModules::tables{'1small(3x5)'}); say ""; }
 
 Sample output:
 
-# COMMAND: perl -Ilib bin/bench-startup-text-table-modules
+# COMMAND: perl -Ilib bin/bench-text-table-modules
 
 
 =head1 SEE ALSO
